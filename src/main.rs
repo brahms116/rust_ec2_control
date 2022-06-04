@@ -1,24 +1,9 @@
-use aws_sdk_ec2::Client;
+mod ec2_control;
+mod ec2_control_lambda;
+
+use ec2_control_lambda::{get_request_params, RequestOperation};
 use lambda_runtime::{service_fn, Error, LambdaEvent};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::env;
-
-// get status
-// switch off
-// switch on
-
-#[derive(Serialize, Deserialize, Debug)]
-enum RequestOperation {
-    STATUS,
-    ON,
-    OFF,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct RequestOperationParams {
-    action: RequestOperation,
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -27,26 +12,34 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn handle(event: LambdaEvent<RequestOperationParams>) -> Result<Value, Error> {
-    let shared_config = aws_config::load_from_env().await;
-    let client = Client::new(&shared_config);
-    let id = env::var("ID").unwrap_or("".to_owned());
-    let descrip = client
-        .describe_instances()
-        .instance_ids(id)
-        .send()
-        .await
-        .unwrap();
-    let status = descrip
-        .reservations()
-        .unwrap()
-        .get(0)
-        .unwrap()
-        .instances()
-        .unwrap()
-        .get(0)
-        .unwrap()
-        .state()
-        .unwrap();
-    Ok(json!(format!("{:?}", status)))
+async fn handle(event: LambdaEvent<Value>) -> Result<Value, Error> {
+    let (event, _context) = event.into_parts();
+    let inputs = get_request_params(event)?;
+    match inputs.action {
+        RequestOperation::STATUS => {}
+        RequestOperation::ON => {}
+        RequestOperation::OFF => {}
+    }
+
+    // let shared_config = aws_config::load_from_env().await;
+    // let client = Client::new(&shared_config);
+    // let id = env::var("ID").unwrap_or("".to_owned());
+    // let descrip = client
+    //     .describe_instances()
+    //     .instance_ids(id)
+    //     .send()
+    //     .await
+    //     .unwrap();
+    // let status = descrip
+    //     .reservations()
+    //     .unwrap()
+    //     .get(0)
+    //     .unwrap()
+    //     .instances()
+    //     .unwrap()
+    //     .get(0)
+    //     .unwrap()
+    //     .state()
+    //     .unwrap();
+    Ok(json!(format!("")))
 }
