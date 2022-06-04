@@ -1,6 +1,9 @@
 mod ec2_control;
 mod ec2_control_lambda;
 
+use aws_config;
+use aws_sdk_ec2::Client;
+use ec2_control::{get_ec2_status, start_ec2, stop_ec2};
 use ec2_control_lambda::{get_request_params, RequestOperation};
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use serde_json::{json, Value};
@@ -15,31 +18,21 @@ async fn main() -> Result<(), Error> {
 async fn handle(event: LambdaEvent<Value>) -> Result<Value, Error> {
     let (event, _context) = event.into_parts();
     let inputs = get_request_params(event)?;
-    match inputs.action {
-        RequestOperation::STATUS => {}
-        RequestOperation::ON => {}
-        RequestOperation::OFF => {}
-    }
+    let shared_config = aws_config::load_from_env().await;
+    let client = Client::new(&shared_config);
 
-    // let shared_config = aws_config::load_from_env().await;
-    // let client = Client::new(&shared_config);
-    // let id = env::var("ID").unwrap_or("".to_owned());
-    // let descrip = client
-    //     .describe_instances()
-    //     .instance_ids(id)
-    //     .send()
-    //     .await
-    //     .unwrap();
-    // let status = descrip
-    //     .reservations()
-    //     .unwrap()
-    //     .get(0)
-    //     .unwrap()
-    //     .instances()
-    //     .unwrap()
-    //     .get(0)
-    //     .unwrap()
-    //     .state()
-    //     .unwrap();
-    Ok(json!(format!("")))
+    match inputs.action {
+        RequestOperation::STATUS => {
+            let result = get_ec2_status(&client, &inputs.instance_id).await?;
+            return Ok(json!(format!("{:?}", result)));
+        }
+        RequestOperation::ON => {
+            let result = start_ec2(&client, &inputs.instance_id).await?;
+            return Ok(json!(format!("{:?}", result)));
+        }
+        RequestOperation::OFF => {
+            let result = stop_ec2(&client, &inputs.instance_id).await?;
+            return Ok(json!(format!("{:?}", result)));
+        }
+    }
 }
