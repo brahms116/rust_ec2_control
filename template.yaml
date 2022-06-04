@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  RustEc2Control:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 128
+      Architectures: ["x86_64"]
+      Handler: bootstrap
+      Runtime: provided.al2
+      Timeout: 5
+      CodeUri: target/lambda/rust_ec2_control/
+      Role: arn:aws:iam::476915837883:role/rust-ec2-control-RustEc2ControlRole-1EWDQ9NV4738F
+
+
+Outputs:
+  FunctionName:
+    Value: !Ref RustEc2Control
+    Description: Ec2 Control from Rust Lambda
